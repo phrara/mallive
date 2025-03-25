@@ -1,0 +1,6 @@
+order:
+  server:
+    name: order
+    protocal: http
+    address: 127.0.0.1:8089
+    

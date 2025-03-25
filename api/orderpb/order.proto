@@ -1,0 +1,44 @@
+syntax = "proto3";
+package orderpb;
+
+option go_package = "github.com/phara/mallive/internal/common/genproto/orderpb";
+
+import "google/protobuf/empty.proto";
+
+service OrderService {
+    rpc CreateOrder(CreateOrderRequest) returns (google.protobuf.Empty);
+    rpc GetOrder(GetOrderRequest) returns (Order);
+    rpc UpdateOrder(Order) returns (google.protobuf.Empty);
+
+}
+
+message CreateOrderRequest {
+    string customerID = 1;
+    repeated ItemWithQuantity items = 2;
+}
+
+message GetOrderRequest {
+    string orderID = 1;
+    string customerID = 2;
+}
+
+message Order {
+    string orderID = 1;
+    string customerID = 2;
+    repeated Item items = 3;
+    string status = 4;
+}
+
+
+message Item {
+   string itemID = 1;
+   string name = 2;
+   int32 quantity = 3;
+   string priceID = 4;
+    
+}
+
+message ItemWithQuantity {
+    string itemID = 1;
+    int32 quantity = 2;
+}
