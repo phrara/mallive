@@ -9,3 +9,7 @@ genproto:
 .PHONY: genopenapi
 genopenapi:
 	@./scripts/genopenapi.sh
+
+.PHONY: root
+root:
+	cd ~/go-proj/mallive

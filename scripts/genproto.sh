@@ -9,7 +9,6 @@ if ! [[ "$0" =~ scripts/genproto.sh ]]; then
     exit 255
 fi
 
-# source ./scripts/lib.sh
 
 API_ROOT="./api"
 
@@ -60,5 +59,3 @@ function gen_for_modules() {
 }
 
 gen_for_modules
-
-echo ""
