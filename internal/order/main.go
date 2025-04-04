@@ -2,10 +2,14 @@ package main
 
 import (
 	"log"
-	_ `net/http`
 
+	"github.com/gin-gonic/gin"
 	"github.com/phrara/mallive/common/config"
+	"github.com/phrara/mallive/common/server"
+	"github.com/phrara/mallive/common/genproto/orderpb"
+	"github.com/phrara/mallive/order/ports"
 	"github.com/spf13/viper"
+	"google.golang.org/grpc"
 )
 
 
@@ -17,18 +21,20 @@ func init() {
 
 
 func main() {
-
-	log.Println(viper.GetString("order.server.address"))
-
+	serviceName := viper.GetString("order.serviceName")
+	// GRPC
 	
-	// mux := http.NewServeMux()
-	// mux.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
-	// 	w.Write([]byte("Hello, world!"))
-	// })
-	
-	// log.Println("Listening on 8089!")
-	// if err := http.ListenAndServe(":8089", mux); err != nil {
-	// 	log.Fatal(err)
-	// }
+	go server.RunGRPCServer(serviceName, func(server *grpc.Server) {
+		orderpb.RegisterOrderServiceServer(server, ports.NewOrderGRPCServer())
+	})
 
-}
+	// HTTP
+	server.RunHTTPServer(serviceName, func(router *gin.Engine) {
+		ports.RegisterHandlersWithOptions(router, NewOrderHTTPServer(), ports.GinServerOptions{
+			BaseURL: "/api",
+			Middlewares: nil,
+			ErrorHandler: nil,
+		})
+	})
+
+}	

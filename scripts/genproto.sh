@@ -36,9 +36,10 @@ function gen_for_modules() {
         rm -rf $go_out
     fi
 
-    for d in $dir_list; do
+    echo "${#dir_list[@]} pb files found"
+
+    for d in ${dir_list[@]}; do
         local service="${d:0:${#d}-2}"
-        # echo $service
         local pb_file="${service}.proto"
         if [ -d "${go_out}/${d}" ]; then
             echo "found exist ${go_out}/${d}, after cleaning, run again"

@@ -1,6 +1,18 @@
 order:
-  server:
-    name: order
+  serviceName: order
+  serverToRun: http
+  httpServer:
     protocal: http
-    address: 127.0.0.1:8089
-    
+    address: 0.0.0.0:8082
+  grpcServer:
+    protocal: grpc
+    address: 0.0.0.0:5002
+inventory:
+  serviceName: inventory
+  serverToRun: grpc
+  httpServer:
+    protocal: http
+    address: 0.0.0.0:8083
+  grpcServer:
+    protocal: grpc
+    address: 0.0.0.0:5003

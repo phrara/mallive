@@ -1,0 +1,30 @@
+syntax = "proto3";
+package inventorypb;
+
+option go_package = "github.com/phrara/mallive/common/genproto/inventorypb";
+
+import "orderpb/order.proto";
+
+service InventoryService {
+    rpc GetItems(GetItemsRequest) returns (GetItemsResponse);
+    rpc CheckItemsInventory(CheckItemsInventoryRequest) returns (CheckItemsInventoryResponse);
+}
+
+message GetItemsRequest {
+    repeated string itemIDs = 1;
+
+}
+
+message GetItemsResponse {
+    repeated orderpb.Item items = 1;
+}
+
+message CheckItemsInventoryRequest {
+    repeated orderpb.ItemWithQuantity items = 1;
+}
+
+message CheckItemsInventoryResponse {
+    int32 result = 1;
+    repeated orderpb.Item items = 2;
+}
+
