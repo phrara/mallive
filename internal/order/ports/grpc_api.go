@@ -4,22 +4,15 @@ import (
 	"context"
 
 	"github.com/phrara/mallive/common/genproto/orderpb"
+	"github.com/phrara/mallive/order/app"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
-
-/*
-type OrderServiceServer interface {
-	CreateOrder(context.Context, *CreateOrderRequest) (*emptypb.Empty, error)
-	GetOrder(context.Context, *GetOrderRequest) (*Order, error)
-	UpdateOrder(context.Context, *Order) (*emptypb.Empty, error)
-}
-**/
 
 // 强制检查接口实现
 var _ orderpb.OrderServiceServer = (*OrderGRPCServer)(nil)
 
 type OrderGRPCServer struct {
-
+	app app.Application
 }
 
 
@@ -33,6 +26,8 @@ func (o *OrderGRPCServer) UpdateOrder(context.Context, *orderpb.Order) (*emptypb
 	return nil, nil
 }
 
-func NewOrderGRPCServer() *OrderGRPCServer {
-	return &OrderGRPCServer{} 
+func NewOrderGRPCServer(app app.Application) *OrderGRPCServer {
+	return &OrderGRPCServer{
+		app: app,
+	} 
 }

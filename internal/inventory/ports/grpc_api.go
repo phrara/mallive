@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/phrara/mallive/common/genproto/inventorypb"
+	"github.com/phrara/mallive/inventory/app"
 )
 
 /*
@@ -17,7 +18,7 @@ type InventoryServiceServer interface {
 var _ inventorypb.InventoryServiceServer = (*InventoryGRPCServer)(nil)
 
 type InventoryGRPCServer struct {
-
+	app app.Application 
 }
 
 func (i *InventoryGRPCServer) GetItems(context.Context, *inventorypb.GetItemsRequest) (*inventorypb.GetItemsResponse, error) {
@@ -29,6 +30,8 @@ func (i *InventoryGRPCServer) CheckItemsInventory(context.Context, *inventorypb.
 }
 
 
-func NewInventoryGRPCServer() *InventoryGRPCServer {
-	return &InventoryGRPCServer{}
+func NewInventoryGRPCServer(app app.Application) *InventoryGRPCServer {
+	return &InventoryGRPCServer{
+		app: app,
+	}
 }

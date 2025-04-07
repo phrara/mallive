@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/phrara/mallive/order/app"
 	"github.com/phrara/mallive/order/ports"
 )
 
@@ -11,7 +12,7 @@ import (
 var _ ports.ServerInterface = (*OrderHTTPServer)(nil)
 
 type OrderHTTPServer struct {
-
+	app app.Application
 }
 
 
@@ -25,6 +26,8 @@ func (o *OrderHTTPServer) GetCustomerCustomerIDOrderOrderID(c *gin.Context, cust
 	c.String(http.StatusOK, "customerID: %v, orderID: %v", customerID, orderID)
 }
 
-func NewOrderHTTPServer() *OrderHTTPServer {
-	return &OrderHTTPServer{}
+func NewOrderHTTPServer(app app.Application) *OrderHTTPServer {
+	return &OrderHTTPServer{
+		app: app,
+	}
 }
