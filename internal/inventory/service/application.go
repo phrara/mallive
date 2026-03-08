@@ -7,6 +7,7 @@ import (
 	"github.com/phrara/mallive/inventory/adapters"
 	"github.com/phrara/mallive/inventory/app"
 	"github.com/phrara/mallive/inventory/app/query"
+	"github.com/phrara/mallive/inventory/infrastructure/integration"
 	"github.com/sirupsen/logrus"
 )
 
@@ -14,6 +15,7 @@ import (
 func NewApplication(ctx context.Context) app.Application {
 	logger := logrus.NewEntry(logrus.StandardLogger())
 	metricsClient := metrics.TodoMetrics{}
+	stripeAPI := integration.NewStripeAPI()
 	repo := adapters.NewMemoryInventoryRepository()
 	return app.Application{
 		Commands: app.Commands{},
@@ -25,7 +27,7 @@ func NewApplication(ctx context.Context) app.Application {
 			),
 			CheckIfItemsInInventory: query.NewCheckIfItemsInInventoryHandler(
 				repo,
-				nil,
+				stripeAPI,
 				logger,
 				metricsClient,
 			),

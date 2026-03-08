@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/phrara/mallive/common/broker"
 	grpcClient "github.com/phrara/mallive/common/client"
@@ -15,6 +17,9 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 
@@ -41,10 +46,8 @@ func NewApplication(ctx context.Context) (app.Application, func()) {
 }
 
 func newApplication(_ context.Context, inventoryGRPC query.InventoryService, ch *amqp.Channel) app.Application {
-	//orderRepo := adapters.NewMemoryOrderRepository()
-	// mongoClient := newMongoClient()
-	// orderRepo := adapters.NewOrderRepositoryMongo(mongoClient)
-	orderRepo := adapters.NewMemoryOrderRepository()
+	mongoClient := newMongoClient()
+	orderRepo := adapters.NewOrderRepositoryMongo(mongoClient)
 	logger := logrus.NewEntry(logrus.StandardLogger())
 	metricClient := metrics.TodoMetrics{}
 	return app.Application{
@@ -59,4 +62,24 @@ func newApplication(_ context.Context, inventoryGRPC query.InventoryService, ch 
 				orderRepo, logger, metricClient),
 		},
 	}
+}
+
+func newMongoClient() *mongo.Client {
+	uri := fmt.Sprintf(
+		"mongodb://%s:%s@%s:%s",
+		viper.GetString("mongo.user"),
+		viper.GetString("mongo.password"),
+		viper.GetString("mongo.host"),
+		viper.GetString("mongo.port"),
+	)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	c, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
+	if err != nil {
+		panic(err)
+	}
+	if err = c.Ping(ctx, readpref.Primary()); err != nil {
+		panic(err)
+	}
+	return c
 }
