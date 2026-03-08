@@ -1,0 +1,24 @@
+global:
+  name: consul
+
+server:
+  replicas: 1
+  bootstrapExpect: 1
+
+  persistence:
+    enabled: false
+
+  extraConfig: |
+    {
+      "data_dir": "/tmp/consul"
+    }
+
+  securityContext:
+    runAsUser: 0
+
+ui:
+  enabled: true
+  service:
+    type: NodePort
+    port: 
+      http: 8580

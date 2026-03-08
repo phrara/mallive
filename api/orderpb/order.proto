@@ -13,32 +13,31 @@ service OrderService {
 }
 
 message CreateOrderRequest {
-    string customerID = 1;
-    repeated ItemWithQuantity items = 2;
+  string CustomerID = 1;
+  repeated ItemWithQuantity Items = 2;
 }
 
 message GetOrderRequest {
-    string orderID = 1;
-    string customerID = 2;
-}
-
-message Order {
-    string orderID = 1;
-    string customerID = 2;
-    repeated Item items = 3;
-    string status = 4;
-}
-
-
-message Item {
-   string itemID = 1;
-   string name = 2;
-   int32 quantity = 3;
-   string priceID = 4;
-    
+  string OrderID = 1;
+  string CustomerID = 2;
 }
 
 message ItemWithQuantity {
-    string itemID = 1;
-    int32 quantity = 2;
+  string ID = 1;
+  int32 Quantity = 2;
+}
+
+message Item {
+  string ID = 1;
+  string Name = 2;
+  int32 Quantity = 3;
+  string PriceID = 4;
+}
+
+message Order {
+  string ID = 1;
+  string CustomerID = 2;
+  string Status = 3;
+  repeated Item Items = 4;
+  string PaymentLink = 5;
 }

@@ -21,7 +21,7 @@ func (m *MemoryOrderRepository) Create(_ context.Context, order *domain.Order) (
 	defer m.mu.Unlock()
 
 	res := &domain.Order{
-		OrderID:     strconv.FormatInt(time.Now().Unix(), 10),
+		ID:     strconv.FormatInt(time.Now().Unix(), 10),
 		CustomerID:  order.CustomerID,
 		Status:      order.Status,
 		PaymentLink: order.PaymentLink,
@@ -40,7 +40,7 @@ func (m *MemoryOrderRepository) Get(_ context.Context, orderID, customerID strin
 	defer m.mu.RUnlock()
 
 	for _, o := range m.store {
-		if o.OrderID == orderID && o.CustomerID == customerID {
+		if o.ID == orderID && o.CustomerID == customerID {
 			logrus.Debugf("mem_order_repo_get || found: orderID=%v, customerID=%v, res=%v", orderID, customerID, *o)
 			return o, nil
 		}
@@ -55,7 +55,7 @@ func (m *MemoryOrderRepository) Update(ctx context.Context, order *domain.Order,
 	defer m.mu.Unlock()
 
 	for i, o := range m.store {
-		if o.OrderID == order.OrderID && o.CustomerID == order.CustomerID {
+		if o.ID == order.ID && o.CustomerID == order.CustomerID {
 			new_o, err := updateFunc(ctx, o)
 			if err != nil {
 				return err
@@ -66,7 +66,7 @@ func (m *MemoryOrderRepository) Update(ctx context.Context, order *domain.Order,
 	}
 
 	return domain.NotFoundError{
-		OrderID: order.OrderID,
+		OrderID: order.ID,
 	}
 }
 

@@ -1,24 +1,36 @@
 package server
 
 import (
-	"log"
-
 	"github.com/gin-gonic/gin"
+	"github.com/phrara/mallive/common/middleware"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
 
-
 func RunHTTPServer(serviceName string, wrapper func(router *gin.Engine)) {
-	addr := viper.Sub(serviceName).GetString("httpServer.address")
-	RunHTTPServerOnAddress(addr, wrapper)
+	addr := viper.Sub(serviceName).GetString("http-addr")
+	if addr == "" {
+		panic("empty http address")
+	}
+	RunHTTPServerOnAddr(addr, wrapper)
 }
 
-func RunHTTPServerOnAddress(addr string, wrapper func(router *gin.Engine)) {
-	app := gin.New()
-	wrapper(app)
-	app.Group("/api")
-	if err := app.Run(addr); err != nil {
-		log.Fatal(err)
+func RunHTTPServerOnAddr(addr string, wrapper func(router *gin.Engine)) {
+	apiRouter := gin.New()
+	setMiddlewares(apiRouter)
+	wrapper(apiRouter)
+	apiRouter.Group("/api")
+	if err := apiRouter.Run(addr); err != nil {
+		panic(err)
 	}
+}
+
+func setMiddlewares(r *gin.Engine) {
+	r.Use(middleware.StructuredLog(logrus.NewEntry(logrus.StandardLogger())))
+	r.Use(gin.Recovery())
+	r.Use(middleware.RequestLog(logrus.NewEntry(logrus.StandardLogger())))
+	// http 链路追踪
+	r.Use(otelgin.Middleware("default_server"))
 }

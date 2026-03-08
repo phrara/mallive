@@ -1,122 +1,166 @@
-openapi: "3.0.3"
+openapi: 3.0.3
 info:
-  title: Order Service
-  version: "1.0"
+  title: order service
+  description: order service
+  version: 1.0.0
 servers:
-  - url: "https://{hostname}/api"
+  - url: 'https://{hostname}/api'
     variables:
       hostname:
-        default: "localhost"
-        description: Server hostname
+        default: 127.0.0.1
 
 paths:
-  /customer/{customerID}/order/{orderID}:
+  /customer/{customer_id}/orders/{order_id}:
     get:
-      description: Get an order
+      description: "get order"
       parameters:
         - in: path
-          name: customerID
+          name: customer_id
           schema:
             type: string
           required: true
+
         - in: path
-          name: orderID
+          name: order_id
           schema:
             type: string
           required: true
+
       responses:
-        "200":
-          description: OK
+        '200':
+          description: todo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Order"
+                $ref: '#/components/schemas/Response'
+
         default:
-          description: Unexpected error
+          description: todo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-  /customer/{customerID}/order/:
+                $ref: '#/components/schemas/Error'
+
+  /customer/{customer_id}/orders:
     post:
-      description: "Create an order"
+      description: "create order"
       parameters:
         - in: path
-          name: customerID
+          name: customer_id
           schema:
             type: string
           required: true
+
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateOrderRequest"
+              $ref: '#/components/schemas/CreateOrderRequest'
+
       responses:
-        "200":
-          description: OK
+        '200':
+          description: todo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Order"
+                $ref: '#/components/schemas/Response'
+
         default:
-          description: Unexpected error
+          description: todo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: '#/components/schemas/Error'
 
 components:
   schemas:
+    
     Order:
       type: object
+      required:
+        - id
+        - customer_id
+        - status
+        - items
+        - payment_link
       properties:
-        orderID:
+        id:
           type: string
-        customerID:
+        customer_id:
           type: string
         status:
           type: string
         items:
           type: array
           items:
-            $ref: "#/components/schemas/Item"
-        paymentLink:
+            $ref: '#/components/schemas/Item'
+        payment_link:
           type: string
+
     Item:
       type: object
+      required:
+        - id
+        - name
+        - quantity
+        - price_id
       properties:
-        itemID:
+        id:
           type: string
         name:
           type: string
         quantity:
           type: integer
           format: int32
-        priceID:
+        price_id:
           type: string
+
     Error:
       type: object
       properties:
-        msg:
+        message:
           type: string
+
     CreateOrderRequest:
       type: object
       required:
-        - customerID
+        - customer_id
         - items
       properties:
-        customerID:
+        customer_id:
           type: string
         items:
           type: array
           items:
-            $ref: "#/components/schemas/ItemWithQuantity"
+            $ref: '#/components/schemas/ItemWithQuantity'
+
     ItemWithQuantity:
       type: object
+      required:
+        - id
+        - quantity
       properties:
-        itemID:
+        id:
           type: string
         quantity:
           type: integer
           format: int32
+          minimum: 1
+
+    Response:
+      type: object
+      properties:
+        errno:
+          type: integer
+        message:
+          type: string
+        data:
+          type: object
+        trace_id:
+          type: string
+      required:
+        - errno
+        - message
+        - data
+        - trace_id

@@ -1,12 +1,32 @@
 package config
 
-import "github.com/spf13/viper"
+import (
+	"sync"
 
-func NewViperConfig() error {
-	viper.SetConfigName("global")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("../common/config")
-	viper.AutomaticEnv()
+	"github.com/spf13/viper"
+)
 
-	return viper.ReadInConfig()
+
+
+var (
+	once sync.Once
+	configPath = "/home/phr/go-proj/mallive/internal/common/config"
+)
+
+func init() {
+	if err := NewViperConfig(); err != nil {
+		panic(err)
+	}
+}
+
+
+func NewViperConfig() (err error) {
+	once.Do(func ()  {
+		viper.SetConfigName("global")
+		viper.SetConfigType("yaml")
+		viper.AddConfigPath(configPath)
+		viper.AutomaticEnv()
+		err = viper.ReadInConfig()
+	})
+	return
 }

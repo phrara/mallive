@@ -1,3 +1,6 @@
+fallback-grpc-addr: 127.0.0.1:3030
+dial-grpc-timeout: 10
+
 order:
   serviceName: order
   serverToRun: http
@@ -7,6 +10,7 @@ order:
   grpcServer:
     protocal: grpc
     address: 0.0.0.0:5002
+
 inventory:
   serviceName: inventory
   serverToRun: grpc
@@ -16,3 +20,53 @@ inventory:
   grpcServer:
     protocal: grpc
     address: 0.0.0.0:5003
+
+payment:
+  serviceName: payment
+  serverToRun: http
+  httpServer:
+    protocal: http
+    address: 0.0.0.0:8084
+
+consul:
+  addr: 192.168.49.2:32745
+
+rabbitmq:
+  user: guest
+  password: guest
+  host: 192.168.49.2
+  port: 30672
+  max-retry: 3
+
+mongo:
+  user: root
+  password: password
+  host: 192.168.49.2
+  port: 30017
+  db-name: "order"
+  coll-name: "order"
+
+redis:
+  local:
+    ip: 127.0.0.1
+    port: 6379
+    pool_size: 100
+    max_conn: 100
+    conn_timeout: 1000
+    read_timeout: 1000
+    write_timeout: 100
+
+
+mysql:
+  user: root
+  password: root
+  host: localhost
+  port: 3307
+  dbname: "gorder_v2"
+
+jaeger:
+  otlp-grpc: 192.168.49.2:31099
+  url: "http://127.0.0.1:14268/api/traces"
+
+stripe-key: sk_test_51T8IaV4JZtdIYvS2fDybClNEkOlEW3gRONvsAtXjqbEKMWNxzboWuSLvMt7inSOrf6WEYXJma5dQqmXHKPS6saF000hDCSw2o5
+endpoint-stripe-secret: whsec_38631154ced11ec499b58a328fc5136e21a886dee266bd63e3440f814faaa34a

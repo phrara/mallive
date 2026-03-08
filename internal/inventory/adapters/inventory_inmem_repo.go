@@ -4,49 +4,75 @@ import (
 	"context"
 	"sync"
 
-	"github.com/phrara/mallive/common/genproto/orderpb"
 	domain "github.com/phrara/mallive/inventory/domain/inventory"
+	"github.com/phrara/mallive/inventory/entity"
 )
 
-
-
-var _ domain.Repository = (*MemoryInventoryRepository)(nil)
-type MemoryInventoryRepository struct {
-	mu *sync.RWMutex
-	store map[string]*orderpb.Item
+type MemoryinventoryRepository struct {
+	lock  *sync.RWMutex
+	store map[string]*entity.Item
 }
 
-func (m *MemoryInventoryRepository) GetItems(ctx context.Context, itemIDs []string) (res []*orderpb.Item, err error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	lacks := make([]string, 0) 
-	var lacksF bool 
-	for _ , id := range itemIDs {
-		if item, b := m.store[id]; b {
+func (m MemoryinventoryRepository) GetInventory(ctx context.Context, ids []string) ([]*entity.ItemWithQuantity, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m MemoryinventoryRepository) UpdateInventory(ctx context.Context, data []*entity.ItemWithQuantity, updateFn func(ctx context.Context, existing []*entity.ItemWithQuantity, query []*entity.ItemWithQuantity) ([]*entity.ItemWithQuantity, error)) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+var stub = map[string]*entity.Item{
+	"item_id": {
+		ID:       "foo_item",
+		Name:     "stub item",
+		Quantity: 10000,
+		PriceID:  "stub_item_price_id",
+	},
+	"item1": {
+		ID:       "item1",
+		Name:     "stub item 1",
+		Quantity: 10000,
+		PriceID:  "stub_item1_price_id",
+	},
+	"item2": {
+		ID:       "item2",
+		Name:     "stub item 2",
+		Quantity: 10000,
+		PriceID:  "stub_item2_price_id",
+	},
+	"item3": {
+		ID:       "item3",
+		Name:     "stub item 3",
+		Quantity: 10000,
+		PriceID:  "stub_item3_price_id",
+	},
+}
+
+func NewMemoryInventoryRepository() *MemoryinventoryRepository {
+	return &MemoryinventoryRepository{
+		lock:  &sync.RWMutex{},
+		store: stub,
+	}
+}
+
+func (m MemoryinventoryRepository) GetItems(ctx context.Context, ids []string) ([]*entity.Item, error) {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+	var (
+		res     []*entity.Item
+		missing []string
+	)
+	for _, id := range ids {
+		if item, exist := m.store[id]; exist {
 			res = append(res, item)
 		} else {
-			lacks = append(lacks, id)
-			lacksF = true
+			missing = append(missing, id)
 		}
 	}
-	if lacksF {
-		return res, domain.NotFoundError{
-			Lacks: lacks,
-		}
-	} else {
+	if len(res) == len(ids) {
 		return res, nil
 	}
+	return res, domain.NotFoundError{Missing: missing}
 }
-
-
-
-func NewMemoryInventoryRepository() *MemoryInventoryRepository {
-	return &MemoryInventoryRepository{
-		mu:    &sync.RWMutex{},
-		store: map[string]*orderpb.Item{},
-	}
-}
-
-
-
-

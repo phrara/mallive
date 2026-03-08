@@ -5,58 +5,60 @@ set -euo pipefail
 shopt -s globstar
 
 if ! [[ "$0" =~ scripts/genproto.sh ]]; then
-    echo "must be run from repo root"
-    exit 255
+  echo "must be run from repository root"
+  exit 255
 fi
 
+source ./scripts/lib.sh
 
 API_ROOT="./api"
 
-function get_dirs() {
-    dir_list=()
-    while IFS= read -r dir; do
-        dir_list+=("$dir")
-    done < <(find . -type f -name "*.proto" -exec dirname {} \; | xargs -n1 basename | sort -u)
-    echo "${dir_list[@]}"
+protoc_lib="/home/phr/protoc/include"
+
+function dirs {
+  dirs=()
+  while IFS= read -r dir; do
+    dirs+=("$dir")
+  done < <(find . -type f -name "*.proto" -exec dirname {} \; | xargs -n1 basename | sort -u)
+  echo "${dirs[@]}"
 }
 
-get_dirs
-
-function get_pb_files() {
-    pb_files=$(find . -type f -name "*.proto")
-    echo "${pb_files[@]}"
+function pb_files {
+  pb_files=$(find . -type f -name '*.proto')
+  echo "${pb_files[@]}"
 }
-
-get_pb_files
 
 function gen_for_modules() {
-    local go_out="internal/common/genproto"
-    if [ -d "$go_out" ]; then
-        echo "found exist ${go_out}, clean"
-        rm -rf $go_out
+  local go_out="internal/common/genproto"
+  if [ -d "$go_out" ]; then
+    log_warning "found existing $go_out, cleaning all files under it"
+    rm -rf $go_out
+  fi
+
+  for dir in $(dirs); do
+    echo "dir=$dir"
+    local service="${dir:0:${#dir}-2}"
+    local pb_file="${service}.proto"
+
+    if [ -d "$go_out/$dir" ]; then
+        log_warning "found existing $go_out/$dir, cleaning all files under it"
+        rm -rf "$go_out"/$dir/*
+    else
+      mkdir -p "$go_out/$dir"
     fi
+    log_info "generating code for $service to $go_out/$dir"
 
-    echo "${#dir_list[@]} pb files found"
-
-    for d in ${dir_list[@]}; do
-        local service="${d:0:${#d}-2}"
-        local pb_file="${service}.proto"
-        if [ -d "${go_out}/${d}" ]; then
-            echo "found exist ${go_out}/${d}, after cleaning, run again"
-            rm -rf "${go_out}/${d}"
-        else
-            mkdir -p "${go_out}/${d}"
-            # paths=source_relative：输出文件与输入文件放在相同的相对目录中
-            protoc \
-                -I="/home/phr/protobuf/include" \
-                -I="${API_ROOT}" \
-                "--go_out=${go_out}" --go_opt=paths=source_relative \
-                --go-grpc_opt=require_unimplemented_servers=false \
-                "--go-grpc_out=${go_out}" --go-grpc_opt=paths=source_relative \
-                "${API_ROOT}/${d}/${pb_file}"
-        fi
-    done 
-    echo "genproto successfully"
+    protoc \
+      -I="${protoc_lib}" \
+      -I="${API_ROOT}" \
+      "--go_out=${go_out}" --go_opt=paths=source_relative \
+      --go-grpc_opt=require_unimplemented_servers=false \
+      "--go-grpc_out=${go_out}" --go-grpc_opt=paths=source_relative \
+      "${API_ROOT}/${dir}/$pb_file"
+  done
+  log_success "protoc gen done!"
 }
 
+echo "directories containing protos to be built: $(dirs)"
+echo "found pb_files: $(pb_files)"
 gen_for_modules

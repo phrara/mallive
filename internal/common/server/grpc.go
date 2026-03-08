@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"net"
 
+	grpc_tags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 )
 
@@ -54,10 +56,17 @@ func RunGRPCServerOnAddress(addr string, registerServer func(server *grpc.Server
 		// Add any other option (check functions starting with logging.With).
 	}
 	grpcServer := grpc.NewServer(
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
+			grpc_tags.UnaryServerInterceptor(grpc_tags.WithFieldExtractor(
+				grpc_tags.CodeGenRequestFieldExtractor,
+			)),
 			logging.UnaryServerInterceptor(InterceptorLogger(logger), opts...),
 		),
 		grpc.ChainStreamInterceptor(
+			grpc_tags.StreamServerInterceptor(grpc_tags.WithFieldExtractor(
+				grpc_tags.CodeGenRequestFieldExtractor,
+			)),
 			logging.StreamServerInterceptor(InterceptorLogger(logger), opts...),
 		),
 	)
