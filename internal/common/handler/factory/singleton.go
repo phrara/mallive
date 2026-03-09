@@ -24,7 +24,7 @@ func (s *Singleton) Get(key string) any {
 	}
 	s.locker.Lock()
 	defer s.locker.Unlock()
-	if value, hit := s.cache[key]; hit {
+	if value, hit := s.cache[key]; hit { // 临界区中再次判断是否有实例，防止重复创建实例
 		return value
 	}
 	s.cache[key] = s.supplier(key)

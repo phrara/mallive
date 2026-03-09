@@ -68,11 +68,7 @@ func (c createOrderHandler) Handle(ctx context.Context, cmd CreateOrder) (*Creat
 	if err != nil {
 		return nil, err
 	}
-
-	t := otel.Tracer("rabbitmq")
-	ctx, span := t.Start(ctx, fmt.Sprintf("rabbitmq.%s.publish", q.Name))
-	defer span.End()
-
+	
 	validItems, err := c.validate(ctx, cmd.Items)
 	if err != nil {
 		return nil, err
@@ -90,7 +86,11 @@ func (c createOrderHandler) Handle(ctx context.Context, cmd CreateOrder) (*Creat
 	if err != nil {
 		return nil, err
 	}
-
+	
+	t := otel.Tracer("rabbitmq")
+	ctx, span := t.Start(ctx, fmt.Sprintf("rabbitmq.%s.publish", q.Name))
+	defer span.End()
+	
 	// 将链路追踪信息注入到 rabbitmq header 中
 	header := broker.InjectRabbitMQHeaders(ctx)
 	

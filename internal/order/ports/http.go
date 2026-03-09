@@ -24,11 +24,10 @@ type OrderHTTPServer struct {
 
 	server.BaseResponse
 	// 匿名字段注入，实现接口
-	ServerInterface
 }
 
 
-func (o *OrderHTTPServer) PostCustomerCustomerIDOrder(c *gin.Context, customerID string) {
+func (o *OrderHTTPServer) PostCustomerCustomerIdOrders(c *gin.Context, customerID string) {
 	var (
 		req  client.CreateOrderRequest
 		resp dto.CreateOrderResponse
@@ -61,7 +60,7 @@ func (o *OrderHTTPServer) PostCustomerCustomerIDOrder(c *gin.Context, customerID
 	}
 }
 
-func (o *OrderHTTPServer) GetCustomerCustomerIDOrderOrderID(c *gin.Context, customerID string, orderID string) {
+func (o *OrderHTTPServer) GetCustomerCustomerIdOrdersOrderId(c *gin.Context, customerID string, orderID string) {
 	var (
 		err  error
 		resp interface{}

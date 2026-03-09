@@ -9,7 +9,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.1
 	github.com/spf13/viper v1.20.0
-	github.com/stripe/stripe-go/v79 v79.12.0
+	github.com/stripe/stripe-go/v80 v80.2.1
 	google.golang.org/grpc v1.79.2
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/gorm v1.31.1

@@ -25,9 +25,6 @@ var _ inventorypb.InventoryServiceServer = (*InventoryGRPCServer)(nil)
 type InventoryGRPCServer struct {
 	// app 注入
 	app app.Application 
-
-	// 匿名字段注入，实现接口
-	inventorypb.InventoryServiceServer
 }
 
 func (i *InventoryGRPCServer) GetItems(ctx context.Context, req *inventorypb.GetItemsRequest) (*inventorypb.GetItemsResponse, error) {

@@ -9,7 +9,7 @@ order:
     address: 0.0.0.0:8082
   grpcServer:
     protocal: grpc
-    address: 0.0.0.0:5002
+    address: 127.0.0.1:5002
 
 inventory:
   serviceName: inventory
@@ -19,7 +19,7 @@ inventory:
     address: 0.0.0.0:8083
   grpcServer:
     protocal: grpc
-    address: 0.0.0.0:5003
+    address: 127.0.0.1:5003
 
 payment:
   serviceName: payment
@@ -48,8 +48,8 @@ mongo:
 
 redis:
   local:
-    ip: 127.0.0.1
-    port: 6379
+    ip: 192.168.49.2
+    port: 30379
     pool_size: 100
     max_conn: 100
     conn_timeout: 1000
@@ -60,8 +60,8 @@ redis:
 mysql:
   user: root
   password: root
-  host: localhost
-  port: 3307
+  host: 192.168.49.2
+  port: 30307
   dbname: "gorder_v2"
 
 jaeger:

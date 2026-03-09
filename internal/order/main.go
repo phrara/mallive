@@ -11,6 +11,7 @@ import (
 	"github.com/phrara/mallive/common/logging"
 	"github.com/phrara/mallive/common/server"
 	"github.com/phrara/mallive/common/tracing"
+
 	"github.com/phrara/mallive/order/infrastructure/consumer"
 	"github.com/phrara/mallive/order/ports"
 	"github.com/phrara/mallive/order/service"

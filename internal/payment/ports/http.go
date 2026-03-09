@@ -14,8 +14,8 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/stripe/stripe-go/v79"
-	"github.com/stripe/stripe-go/v79/webhook"
+	"github.com/stripe/stripe-go/v80"
+	"github.com/stripe/stripe-go/v80/webhook"
 	"go.opentelemetry.io/otel"
 )
 
@@ -43,8 +43,10 @@ func (h *PaymentHandler) handleWebhook(c *gin.Context) {
 		return
 	}
 
-	event, err := webhook.ConstructEvent(payload, c.Request.Header.Get("Stripe-Signature"),
-		viper.GetString("endpoint-stripe-secret"))
+	event, err := webhook.ConstructEventWithOptions(payload, c.Request.Header.Get("Stripe-Signature"),
+		viper.GetString("endpoint-stripe-secret"), webhook.ConstructEventOptions{
+			IgnoreAPIVersionMismatch: true,
+		})
 
 	if err != nil {
 		logrus.Infof("Error verifying webhook signature: %v\n", err)

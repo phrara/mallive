@@ -7,8 +7,8 @@ import (
 
 	"github.com/phrara/mallive/common/genproto/orderpb"
 	"github.com/phrara/mallive/common/tracing"
-	"github.com/stripe/stripe-go/v79"
-	"github.com/stripe/stripe-go/v79/checkout/session"
+	"github.com/stripe/stripe-go/v80"
+	"github.com/stripe/stripe-go/v80/checkout/session"
 )
 
 type StripeProcessor struct {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	_ "github.com/phrara/mallive/common/config"
 	"github.com/phrara/mallive/common/discovery"
@@ -40,7 +41,7 @@ func main() {
 	// Service Register
 	deregisterFunc, err := discovery.RegisterToConsul(ctx, serviceName)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Fatal(fmt.Errorf("RegisterToConsul: %v", err))
 	}
 	defer func ()  {
 		_ = deregisterFunc()

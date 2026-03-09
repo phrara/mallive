@@ -6,8 +6,8 @@ import (
 	_ "github.com/phrara/mallive/common/config"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/stripe/stripe-go/v79"
-	"github.com/stripe/stripe-go/v79/product"
+	"github.com/stripe/stripe-go/v80"
+	"github.com/stripe/stripe-go/v80/product"
 )
 
 type StripeAPI struct {

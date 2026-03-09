@@ -58,6 +58,14 @@ var stub = map[string]string{
 }
 
 func (h checkIfItemsInInventoryHandler) Handle(ctx context.Context, query CheckIfItemsInInventory) ([]*entity.Item, error) {
+	// 施加分布式锁, 防止超卖和数据不一致
+	/*
+	如果不加锁：两个线程可能同时读取到“库存剩余 1”，然后各自执行 -1 操作，
+		最后库存变成了 -1，但实际上卖出了两件商品。
+	加锁后：同一时刻只有一个实例的请求能拿到锁。
+		它处理完“检查库存 -> 扣减库存 -> 下单”这一系列操作后，
+		才会释放锁，让下一个请求进来。
+	*/
 	if err := lock(ctx, getLockKey(query)); err != nil {
 		return nil, errors.Wrapf(err, "redis lock error: key=%s", getLockKey(query))
 	}

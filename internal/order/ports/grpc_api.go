@@ -22,8 +22,6 @@ var _ orderpb.OrderServiceServer = (*OrderGRPCServer)(nil)
 type OrderGRPCServer struct {
 	app app.Application
 
-	// 匿名字段注入，实现接口
-	orderpb.OrderServiceServer
 }
 
 

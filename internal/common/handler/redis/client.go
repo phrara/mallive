@@ -28,7 +28,12 @@ func SetNX(ctx context.Context, client *redis.Client, key, value string, ttl tim
 	if client == nil {
 		return errors.New("redis client is nil")
 	}
-	_, err = client.SetNX(ctx, key, value, ttl).Result()
+	// _, err = client.SetNX(ctx, key, value, ttl).Result()
+	_, err = client.SetArgs(ctx, key, value, redis.SetArgs{
+		Mode: "NX",
+		TTL: ttl,
+	}).Result()
+	
 	return err
 }
 

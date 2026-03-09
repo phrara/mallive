@@ -25,17 +25,24 @@ func NewConsumer(app app.Application) *Consumer {
 }
 
 func (c *Consumer) Listen(ch *amqp.Channel) {
+	var err error
+	defer func ()  {
+		if err != nil {
+			logrus.Fatalf("Listen from MQ: %s failed: %v", broker.EventOrderCreated, err)
+		}
+	}()
 	q, err := ch.QueueDeclare(broker.EventOrderPaid, true, false, true, false, nil)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Panicf("%v @ %s",err, "QueueDeclare")
 	}
 	err = ch.QueueBind(q.Name, "", broker.EventOrderPaid, false, nil)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Panicf("%v @ %s",err, "QueueBind")
 	}
 	msgs, err := ch.Consume(q.Name, "", false, false, false, false, nil)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Panicf("%v @ %s",err, "Consume")
+
 	}
 	var forever chan struct{}
 	go func() {

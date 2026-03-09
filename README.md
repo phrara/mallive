@@ -41,13 +41,22 @@ kubectl apply -f manifest/rabbitmq.yaml
 kubectl apply -f manifest/mongo.yaml
 ```
 
+## Mysql
+```sh
+kubectl apply -f manifest/mysql/mysql.yaml
+```
 
+## Redis
+```sh
+kubectl apply -f manifest/redis/redis.yaml
+```
 
 
 ## Stripe
 - [https://dashboard.stripe.com/acct_1T8IaV4JZtdIYvS2/test/dashboard](https://dashboard.stripe.com/acct_1T8IaV4JZtdIYvS2/test/dashboard)
 
 ```sh
+# 90 days expire
 stripe login
 
 # 监听 webhook，获取 endpoint-stripe-secret
