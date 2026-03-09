@@ -1,0 +1,88 @@
+# 高可用 K8s 部署配置
+# 使用方法: kubectl apply -f apps/
+
+---
+# ConfigMap - 全局配置
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mallive-config
+  namespace: default
+data:
+  global.yaml: |
+    fallback-grpc-addr: consul.service.consul:3030
+    dial-grpc-timeout: 10
+
+    order:
+      serviceName: order
+      serverToRun: http
+      httpServer:
+        protocal: http
+        address: 0.0.0.0:8082
+      grpcServer:
+        protocal: grpc
+        address: 0.0.0.0:5002
+
+    inventory:
+      serviceName: inventory
+      serverToRun: grpc
+      httpServer:
+        protocal: http
+        address: 0.0.0.0:8083
+      grpcServer:
+        protocal: grpc
+        address: 0.0.0.0:5003
+
+    payment:
+      serviceName: payment
+      serverToRun: http
+      httpServer:
+        protocal: http
+        address: 0.0.0.0:8084
+
+    kitchen:
+      service-name: kitchen
+
+    consul:
+      addr: consul.service.consul:8500
+
+    rabbitmq:
+      user: guest
+      password: guest
+      host: rabbitmq.service.svc.cluster.local
+      port: "5672"
+      max-retry: 3
+
+    mongo:
+      user: root
+      password: password
+      host: order-mongo.service.svc.cluster.local
+      port: "27017"
+      db-name: "order"
+      coll-name: "order"
+
+    redis:
+      local:
+        ip: redis.service.svc.cluster.local
+        port: 6379
+        pool_size: 100
+        max_conn: 100
+        conn_timeout: 1000
+        read_timeout: 1000
+        write_timeout: 100
+
+    mysql:
+      user: root
+      password: root
+      host: mysql.service.svc.cluster.local
+      port: 3306
+      dbname: "gorder_v2"
+
+    jaeger:
+      otlp-grpc: jaeger-collector.service.svc.cluster.local:4317
+      url: "http://jaeger-collector.service.svc.cluster.local:14268/api/traces"
+
+    loggingOutput: "STDOUT"
+
+    stripe-key: "sk_test_51T8IaV4JZtdIYvS2fDybClNEkOlEW3gRONvsAtXjqbEKMWNxzboWuSLvMt7inSOrf6WEYXJma5dQqmXHKPS6saF000hDCSw2o5"
+    endpoint-stripe-secret: "whsec_38631154ced11ec499b58a328fc5136e21a886dee266bd63e3440f814faaa34a"

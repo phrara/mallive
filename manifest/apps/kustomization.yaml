@@ -1,0 +1,33 @@
+# Kustomize 配置
+# 使用方法:
+#   kubectl apply -k .
+#
+# 预览:
+#   kubectl kustomize .
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - configmap.yaml
+  - services.yaml
+  - ingress.yaml
+
+# 命名空间
+namespace: default
+
+# 通用标签
+commonLabels:
+  app.kubernetes.io/name: mallive
+  app.kubernetes.io/part-of: mallive-platform
+
+# 镜像更新配置
+images:
+  - name: mallive/order
+    newTag: latest
+  - name: mallive/inventory
+    newTag: latest
+  - name: mallive/payment
+    newTag: latest
+  - name: mallive/kitchen
+    newTag: latest

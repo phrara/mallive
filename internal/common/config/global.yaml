@@ -68,5 +68,7 @@ jaeger:
   otlp-grpc: 192.168.49.2:31099
   url: "http://127.0.0.1:14268/api/traces"
 
+loggingOutput: "STDOUT"
+
 stripe-key: sk_test_51T8IaV4JZtdIYvS2fDybClNEkOlEW3gRONvsAtXjqbEKMWNxzboWuSLvMt7inSOrf6WEYXJma5dQqmXHKPS6saF000hDCSw2o5
 endpoint-stripe-secret: whsec_38631154ced11ec499b58a328fc5136e21a886dee266bd63e3440f814faaa34a
