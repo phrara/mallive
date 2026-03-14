@@ -16,17 +16,30 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+// getGRPCAddr 获取 gRPC 服务地址
+// K8s 环境使用 Service DNS，本地开发使用配置文件
+func getGRPCAddr(serviceName string) string {
+	// K8s 环境使用 Service DNS
+	if discovery.IsK8sEnvironment() {
+		return discovery.GetServiceDNS(serviceName, 5003)
+	}
+	// 本地开发使用 Consul
+	addr, err := discovery.GetServiceAddr(context.Background(), serviceName)
+	if err != nil {
+		logrus.Warnf("failed to get addr from consul for %s: %v", serviceName, err)
+		return viper.Sub(serviceName).GetString("grpcServer.address")
+	}
+	return addr
+}
+
 func NewInventoryGRPCClient(ctx context.Context) (client inventorypb.InventoryServiceClient, close func() error, err error) {
-	if !WaitForStockGRPCClient(viper.GetDuration("dial-grpc-timeout") * time.Second) {
+	// 使用 K8s Service DNS 或 Consul
+	grpcAddr := "inventory.default.svc.cluster.local:5003"
+
+	if !waitForGRPC(grpcAddr, viper.GetDuration("dial-grpc-timeout")*time.Second) {
 		return nil, nil, errors.New("stock grpc not available")
 	}
-	grpcAddr, err := discovery.GetServiceAddr(ctx, viper.GetString("inventory.serviceName"))
-	if err != nil {
-		return nil, func() error { return nil }, err
-	}
-	if grpcAddr == "" {
-		logrus.Warn("empty grpc addr for stock grpc")
-	}
+
 	opts := grpcDialOpts(grpcAddr)
 	conn, err := grpc.NewClient(grpcAddr, opts...)
 	if err != nil {
@@ -36,15 +49,11 @@ func NewInventoryGRPCClient(ctx context.Context) (client inventorypb.InventorySe
 }
 
 func NewOrderGRPCClient(ctx context.Context) (client orderpb.OrderServiceClient, close func() error, err error) {
-	if !WaitForOrderGRPCClient(viper.GetDuration("dial-grpc-timeout") * time.Second) {
+	// 使用 K8s Service DNS 或 Consul
+	grpcAddr := "order.default.svc.cluster.local:5002"
+
+	if !waitForGRPC(grpcAddr, viper.GetDuration("dial-grpc-timeout")*time.Second) {
 		return nil, nil, errors.New("order grpc not available")
-	}
-	grpcAddr, err := discovery.GetServiceAddr(ctx, viper.GetString("order.serviceName"))
-	if err != nil {
-		return nil, func() error { return nil }, err
-	}
-	if grpcAddr == "" {
-		logrus.Warn("empty grpc addr for order grpc")
 	}
 	opts := grpcDialOpts(grpcAddr)
 
@@ -62,17 +71,8 @@ func grpcDialOpts(_ string) []grpc.DialOption {
 	}
 }
 
-func WaitForOrderGRPCClient(timeout time.Duration) bool {
-	logrus.Infof("waiting for order grpc client, timeout: %v seconds", timeout.Seconds())
-	return waitFor(viper.GetString("order.grpcServer.address"), timeout)
-}
-
-func WaitForStockGRPCClient(timeout time.Duration) bool {
-	logrus.Infof("waiting for inventory grpc client, timeout: %v seconds", timeout.Seconds())
-	return waitFor(viper.GetString("inventory.grpcServer.address"), timeout)
-}
-
-func waitFor(addr string, timeout time.Duration) bool {
+func waitForGRPC(addr string, timeout time.Duration) bool {
+	logrus.Infof("waiting for grpc client: %s, timeout: %v seconds", addr, timeout.Seconds())
 	portAvailable := make(chan struct{})
 	timeoutCh := time.After(timeout)
 
@@ -84,8 +84,9 @@ func waitFor(addr string, timeout time.Duration) bool {
 			default:
 				// continue
 			}
-			_, err := net.Dial("tcp", addr)
+			conn, err := net.Dial("tcp", addr)
 			if err == nil {
+				conn.Close()
 				close(portAvailable)
 				return
 			}

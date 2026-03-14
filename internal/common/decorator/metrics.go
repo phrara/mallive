@@ -8,7 +8,7 @@ import (
 )
 
 type MetricsClient interface {
-	Inc(key string, value int)
+	Inc(key string, value any)
 }
 
 type queryMetricsDecorator[C, R any] struct {
@@ -21,7 +21,7 @@ func (q queryMetricsDecorator[C, R]) Handle(ctx context.Context, cmd C) (result 
 	actionName := strings.ToLower(generateActionName(cmd))
 	defer func() {
 		end := time.Since(start)
-		q.client.Inc(fmt.Sprintf("querys.%s.duration", actionName), int(end.Seconds()))
+		q.client.Inc(fmt.Sprintf("querys.%s.duration", actionName), end.Seconds())
 		if err == nil {
 			q.client.Inc(fmt.Sprintf("querys.%s.success", actionName), 1)
 		} else {
@@ -41,7 +41,7 @@ func (q commandMetricsDecorator[C, R]) Handle(ctx context.Context, cmd C) (resul
 	actionName := strings.ToLower(generateActionName(cmd))
 	defer func() {
 		end := time.Since(start)
-		q.client.Inc(fmt.Sprintf("command.%s.duration", actionName), int(end.Seconds()))
+		q.client.Inc(fmt.Sprintf("command.%s.duration", actionName), end.Seconds())
 		if err == nil {
 			q.client.Inc(fmt.Sprintf("command.%s.success", actionName), 1)
 		} else {

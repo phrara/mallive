@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: test-rabbitmq
+  name: test-rabbitmq
+spec:
+  containers:
+    - image: mallive/test-rabbitmq:latest
+      name: test-rabbitmq
+      imagePullPolicy: IfNotPresent
+      resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Never
+status: {}

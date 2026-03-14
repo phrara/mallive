@@ -7,7 +7,7 @@ import (
 
 	"github.com/phrara/mallive/common/broker"
 	grpcClient "github.com/phrara/mallive/common/client"
-	"github.com/phrara/mallive/common/metrics"
+	"github.com/phrara/mallive/common/decorator"
 	"github.com/phrara/mallive/order/adapters"
 	_ "github.com/phrara/mallive/order/adapters"
 	"github.com/phrara/mallive/order/adapters/grpc"
@@ -23,7 +23,7 @@ import (
 )
 
 
-func NewApplication(ctx context.Context) (app.Application, func()) {
+func NewApplication(ctx context.Context, metricsClient decorator.MetricsClient) (app.Application, func()) {
 	if inventoryGRPCClient, inventoryGRPCClientClose, err := grpcClient.NewInventoryGRPCClient(ctx); err != nil {
 		panic(err)	
 	} else {
@@ -36,7 +36,7 @@ func NewApplication(ctx context.Context) (app.Application, func()) {
 		)
 		inventoryGRPC := grpc.NewInventoryGRPC(inventoryGRPCClient)
 		return newApplication(
-			ctx, inventoryGRPC, ch,
+			ctx, inventoryGRPC, ch, metricsClient,
 		), func() {
 			_ = inventoryGRPCClientClose()
 			_ = closeCh()
@@ -45,11 +45,11 @@ func NewApplication(ctx context.Context) (app.Application, func()) {
 	}
 }
 
-func newApplication(_ context.Context, inventoryGRPC query.InventoryService, ch *amqp.Channel) app.Application {
+func newApplication(_ context.Context, inventoryGRPC query.InventoryService, ch *amqp.Channel, metricClient decorator.MetricsClient) app.Application {
 	mongoClient := newMongoClient()
 	orderRepo := adapters.NewOrderRepositoryMongo(mongoClient)
 	logger := logrus.NewEntry(logrus.StandardLogger())
-	metricClient := metrics.TodoMetrics{}
+	
 	return app.Application{
 		Commands: app.Commands{
 			CreateOrder: command.NewCreateOrderHandler(

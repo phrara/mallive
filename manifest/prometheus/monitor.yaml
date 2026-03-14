@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: inventory-sm
+  namespace: monitoring
+  labels:
+    release: prometheus-stack # 关键：必须与 Prometheus 实例的 serviceMonitorSelector 匹配
+spec:
+  selector:
+    matchLabels:
+      app: order # 匹配 Service 的标签
+  namespaceSelector:
+    matchNames:
+      - default
+  endpoints:
+    - port: http # 对应 Service 里的端口名称
+      path: /metrics # 你在 Gin 里定义的路径
+      interval: 15s
+

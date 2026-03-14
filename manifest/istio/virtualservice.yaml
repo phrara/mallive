@@ -1,0 +1,362 @@
+# Istio 部署配置
+# 使用方法: kubectl apply -f istio/
+#
+# 包含:
+# - Gateway: 入口网关
+# - VirtualService: 路由规则
+# - DestinationRule: 目标规则（负载均衡、熔断）
+# - PeerAuthentication: mTLS 配置
+
+# ============================================
+# Gateway - 入口网关
+# ============================================
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: mallive-gateway
+  namespace: default
+spec:
+  selector:
+    istio: ingressgateway  # 根据实际 ingressgateway 选择器调整
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*"
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: mallive-tls-secret
+      hosts:
+        - "*"
+
+---
+# gRPC Gateway
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: mallive-grpc-gateway
+  namespace: default
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 5002
+        name: grpc
+        protocol: GRPC
+      hosts:
+        - "*"
+
+
+# ============================================
+# VirtualService - 路由规则
+# ============================================
+
+---
+# Order Service 路由
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: order-vs
+  namespace: default
+spec:
+  hosts:
+    - order
+    - order.default.svc.cluster.local
+  gateways:
+    - mallive-gateway
+    - mesh  # 内部服务间调用
+  http:
+    - match:
+        - uri:
+            prefix: "/api"
+      route:
+        - destination:
+            host: order
+            port:
+              number: 8082
+    - match:
+        - uri:
+            exact: "/health"
+      route:
+        - destination:
+            host: order
+            port:
+              number: 8082
+    - match:
+        - uri:
+            exact: "/ready"
+      route:
+        - destination:
+            host: order
+            port:
+              number: 8082
+
+---
+# Order Service gRPC 路由
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: order-grpc-vs
+  namespace: default
+spec:
+  hosts:
+    - order-grpc
+    - order.default.svc.cluster.local
+  gateways:
+    - mallive-grpc-gateway
+    - mesh
+  http:
+    - match:
+        - headers:
+            ":method":
+              exact: "POST"
+      route:
+        - destination:
+            host: order
+            port:
+              number: 5002
+
+---
+# Payment Service 路由
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: payment-vs
+  namespace: default
+spec:
+  hosts:
+    - payment
+    - payment.default.svc.cluster.local
+  gateways:
+    - mallive-gateway
+    - mesh
+  http:
+    - match:
+        - uri:
+            prefix: "/api"
+      route:
+        - destination:
+            host: payment
+            port:
+              number: 8084
+    - match:
+        - uri:
+            exact: "/health"
+      route:
+        - destination:
+            host: payment
+            port:
+              number: 8084
+    - match:
+        - uri:
+            exact: "/webhook"
+      route:
+        - destination:
+            host: payment
+            port:
+              number: 8084
+
+---
+# Inventory Service 路由 (gRPC)
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: inventory-grpc-vs
+  namespace: default
+spec:
+  hosts:
+    - inventory
+    - inventory.default.svc.cluster.local
+  gateways:
+    - mesh
+  http:
+    - match:
+        - uri:
+            prefix: "/mallive.inventory.InventoryService"
+      route:
+        - destination:
+            host: inventory
+            port:
+              number: 5003
+
+---
+# Kitchen Service 路由
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: kitchen-vs
+  namespace: default
+spec:
+  hosts:
+    - kitchen
+    - kitchen.default.svc.cluster.local
+  gateways:
+    - mesh
+  http:
+    - route:
+        - destination:
+            host: kitchen
+            port:
+              number: 9090
+
+
+# ============================================
+# DestinationRule - 目标规则
+# ============================================
+
+---
+# Order Service 目标规则
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: order-dr
+  namespace: default
+spec:
+  host: order
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        h2UpgradePolicy: UPGRADE
+        http1MaxPendingRequests: 100
+        http2MaxRequests: 1000
+    loadBalancer:
+      simple: LEAST_REQUEST
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+  subsets:
+    - name: v1
+      labels:
+        version: v1
+
+---
+# Payment Service 目标规则
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: payment-dr
+  namespace: default
+spec:
+  host: payment
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        h2UpgradePolicy: UPGRADE
+        http1MaxPendingRequests: 50
+        http2MaxRequests: 500
+    loadBalancer:
+      simple: ROUND_ROBIN
+
+---
+# Inventory Service 目标规则
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: inventory-dr
+  namespace: default
+spec:
+  host: inventory
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 200
+      http:
+        h2UpgradePolicy: UPGRADE
+        http1MaxPendingRequests: 200
+        http2MaxRequests: 2000
+    loadBalancer:
+      simple: LEAST_REQUEST
+
+---
+# Kitchen Service 目标规则
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: kitchen-dr
+  namespace: default
+spec:
+  host: kitchen
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 50
+      http:
+        h2UpgradePolicy: UPGRADE
+        http1MaxPendingRequests: 50
+        http2MaxRequests: 500
+
+
+# ============================================
+# PeerAuthentication - mTLS 配置
+# ============================================
+
+---
+# STRICT mTLS: 服务间强制双向 TLS
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: mallive-mtls
+  namespace: default
+spec:
+  mtls:
+    mode: STRICT
+
+---
+# 宽容模式 mTLS (可选，用于调试)
+# apiVersion: security.istio.io/v1beta1
+# kind: PeerAuthentication
+# metadata:
+#   name: mallive-mtls-permissive
+#   namespace: default
+# spec:
+#   mtls:
+#     mode: PERMISSIVE
+
+
+# ============================================
+# AuthorizationPolicy - 授权策略 (可选)
+# ============================================
+
+---
+# 允许所有服务的访问 (mesh 内部)
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-all
+  namespace: default
+spec:
+  {}  # 空规则表示允许所有
+
+---
+# 限制外部访问示例
+# apiVersion: security.istio.io/v1beta1
+# kind: AuthorizationPolicy
+# metadata:
+#   name: order-authz
+#   namespace: default
+# spec:
+#   selector:
+#     matchLabels:
+#       app: order
+#   rules:
+#     - from:
+#         - source:
+#             principals: ["cluster.local/ns/default/sa/*"]
+#       to:
+#         - operation:
+#             methods: ["GET", "POST"]

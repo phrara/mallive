@@ -8,7 +8,7 @@ import (
 	"github.com/phrara/mallive/common/logging"
 	"github.com/phrara/mallive/inventory/infrastructure/persistent/builder"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
+	// "github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -19,17 +19,29 @@ type MySQL struct {
 }
 
 func NewMySQL() *MySQL {
+	host := "mysql-0.mysql.default.svc.cluster.local"
+	port := "3306"
+	user := "root"
+	password := "root"
+	dbname := "gorder_v2"
+
 	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		viper.GetString("mysql.user"),
-		viper.GetString("mysql.password"),
-		viper.GetString("mysql.host"),
-		viper.GetString("mysql.port"),
-		viper.GetString("mysql.dbname"),
+		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local&timeout=10s&allowNativePasswords=true",
+		user, password, host, port, dbname,
 	)
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	var db *gorm.DB
+	var err error
+	for i := 0; i < 10; i++ {
+		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+		if err == nil {
+			break
+		}
+
+		logrus.Warn("mysql not ready, retry...")
+		time.Sleep(2 * time.Second)
+	}
 	if err != nil {
-		logrus.Panicf("connect to mysql failed, err=%v", err)
+		logrus.Panicf("connect to mysql failed at %s, err=%v", dsn, err)
 	}
 	//db.Callback().Create().Before("gorm:create").Register("set_create_time", func(d *gorm.UseTransaction) {
 	//	d.Statement.SetColumn("CreatedAt", time.Now().Format(time.DateTime))

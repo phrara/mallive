@@ -70,6 +70,15 @@ stripe listen --forward-to localhost:8084/api/webhook
 kubectl apply -f manifest/jaeger.yaml
 ```
 
+## Prometheus
++ 使用的 k8s Prometheus Stack 套件
++ 集成Grafana和多种 CRD/Operator
++ 使用 `ServiceMonitor` CRD 实现对指定服务的监控
+
+```sh
+kubectl apply -f manifest/prometheus/monitor.yaml
+```
+
 
 ## OpenTelemetry
 

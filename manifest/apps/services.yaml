@@ -1,6 +1,3 @@
-# 高可用服务部署配置
-# 包含: order, inventory, payment, kitchen
-
 # ============================================
 # Order Service - 订单服务
 # ============================================
@@ -10,7 +7,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: order-http
+  name: order
   namespace: default
   labels:
     app: order
@@ -28,33 +25,6 @@ spec:
       port: 5002
       targetPort: 5002
       protocol: TCP
-
----
-# Service - NodePort (开发/测试用)
-apiVersion: v1
-kind: Service
-metadata:
-  name: order-http-external
-  namespace: default
-  labels:
-    app: order
-    component: service-external
-spec:
-  type: NodePort
-  selector:
-    app: order
-  ports:
-    - name: http
-      port: 8082
-      targetPort: 8082
-      nodePort: 30082
-      protocol: TCP
-    - name: grpc
-      port: 5002
-      targetPort: 5002
-      nodePort: 30052
-      protocol: TCP
-
 ---
 # Deployment - 高可用配置
 apiVersion: apps/v1
@@ -67,7 +37,7 @@ metadata:
     version: v1
 spec:
   # 高可用: 多副本
-  replicas: 3
+  replicas: 1
   # 滚动更新策略
   strategy:
     type: RollingUpdate
@@ -139,26 +109,6 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
-          # 存活探针
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8082
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-            successThreshold: 1
-          # 就绪探针
-          readinessProbe:
-            httpGet:
-              path: /ready
-              port: 8082
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 3
-            successThreshold: 1
           volumeMounts:
             - name: config
               mountPath: /config
@@ -183,7 +133,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: order
-  minReplicas: 2
+  minReplicas: 1
   maxReplicas: 10
   metrics:
     - type: Resource
@@ -207,7 +157,7 @@ metadata:
   name: order-pdb
   namespace: default
 spec:
-  minAvailable: 2
+  minAvailable: 1
   selector:
     matchLabels:
       app: order
@@ -222,7 +172,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: inventory-grpc
+  name: inventory
   namespace: default
   labels:
     app: inventory
@@ -236,28 +186,6 @@ spec:
       port: 5003
       targetPort: 5003
       protocol: TCP
-
----
-# Service - NodePort (开发/测试用)
-apiVersion: v1
-kind: Service
-metadata:
-  name: inventory-grpc-external
-  namespace: default
-  labels:
-    app: inventory
-    component: service-external
-spec:
-  type: NodePort
-  selector:
-    app: inventory
-  ports:
-    - name: grpc
-      port: 5003
-      targetPort: 5003
-      nodePort: 30053
-      protocol: TCP
-
 ---
 # Deployment
 apiVersion: apps/v1
@@ -269,7 +197,7 @@ metadata:
     app: inventory
     version: v1
 spec:
-  replicas: 3
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -328,20 +256,6 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
-          livenessProbe:
-            tcpSocket:
-              port: 5003
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-          readinessProbe:
-            tcpSocket:
-              port: 5003
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 3
           volumeMounts:
             - name: config
               mountPath: /config
@@ -366,8 +280,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: inventory
-  minReplicas: 2
-  maxReplicas: 10
+  minReplicas: 1
+  maxReplicas: 5
   metrics:
     - type: Resource
       resource:
@@ -390,7 +304,7 @@ metadata:
   name: inventory-pdb
   namespace: default
 spec:
-  minAvailable: 2
+  minAvailable: 1
   selector:
     matchLabels:
       app: inventory
@@ -405,7 +319,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: payment-http
+  name: payment
   namespace: default
   labels:
     app: payment
@@ -419,28 +333,6 @@ spec:
       port: 8084
       targetPort: 8084
       protocol: TCP
-
----
-# Service - NodePort
-apiVersion: v1
-kind: Service
-metadata:
-  name: payment-http-external
-  namespace: default
-  labels:
-    app: payment
-    component: service-external
-spec:
-  type: NodePort
-  selector:
-    app: payment
-  ports:
-    - name: http
-      port: 8084
-      targetPort: 8084
-      nodePort: 30084
-      protocol: TCP
-
 ---
 # Deployment
 apiVersion: apps/v1
@@ -452,7 +344,7 @@ metadata:
     app: payment
     version: v1
 spec:
-  replicas: 3
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -514,22 +406,6 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8084
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-          readinessProbe:
-            httpGet:
-              path: /ready
-              port: 8084
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 3
           volumeMounts:
             - name: config
               mountPath: /config
@@ -554,7 +430,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: payment
-  minReplicas: 2
+  minReplicas: 1
   maxReplicas: 10
   metrics:
     - type: Resource
@@ -578,176 +454,7 @@ metadata:
   name: payment-pdb
   namespace: default
 spec:
-  minAvailable: 2
+  minAvailable: 1
   selector:
     matchLabels:
       app: payment
-
-
-# ============================================
-# Kitchen Service - 厨房/履约服务
-# ============================================
-
----
-# Service - ClusterIP (无状态服务，不需要持久端口)
-apiVersion: v1
-kind: Service
-metadata:
-  name: kitchen
-  namespace: default
-  labels:
-    app: kitchen
-    component: service
-spec:
-  type: ClusterIP
-  clusterIP: None
-  selector:
-    app: kitchen
-  ports:
-    - name: metrics
-      port: 9090
-      targetPort: 9090
-      protocol: TCP
-
----
-# Deployment
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: kitchen
-  namespace: default
-  labels:
-    app: kitchen
-    version: v1
-spec:
-  replicas: 3
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
-  selector:
-    matchLabels:
-      app: kitchen
-  template:
-    metadata:
-      labels:
-        app: kitchen
-        version: v1
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "9090"
-    spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                    - key: app
-                      operator: In
-                      values:
-                        - kitchen
-                topologyKey: kubernetes.io/hostname
-      topologySpreadConstraints:
-        - maxSkew: 1
-          topologyKey: topology.kubernetes.io/zone
-          whenUnsatisfiable: ScheduleAnyway
-          labelSelector:
-            matchLabels:
-              app: kitchen
-        - maxSkew: 1
-          topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: ScheduleAnyway
-          labelSelector:
-            matchLabels:
-              app: kitchen
-      terminationGracePeriodSeconds: 30
-      containers:
-        - name: kitchen
-          image: mallive/kitchen:latest
-          imagePullPolicy: IfNotPresent
-          env:
-            - name: CONFIG_PATH
-              value: "/config/global.yaml"
-          resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
-          # 无 HTTP 端口，使用 liveness probe 延迟检测
-          livenessProbe:
-            exec:
-              command:
-                - sh
-                - -c
-                - "exit 0"
-            initialDelaySeconds: 30
-            periodSeconds: 30
-            timeoutSeconds: 5
-            failureThreshold: 3
-          readinessProbe:
-            exec:
-              command:
-                - sh
-                - -c
-                - "exit 0"
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 3
-          volumeMounts:
-            - name: config
-              mountPath: /config
-              readOnly: true
-      volumes:
-        - name: config
-          configMap:
-            name: mallive-config
-            items:
-              - key: global.yaml
-                path: global.yaml
-
----
-# HPA
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: kitchen-hpa
-  namespace: default
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: kitchen
-  minReplicas: 2
-  maxReplicas: 10
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 80
-
----
-# PDB
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: kitchen-pdb
-  namespace: default
-spec:
-  minAvailable: 2
-  selector:
-    matchLabels:
-      app: kitchen

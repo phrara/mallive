@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: test-mysql
+  name: test-mysql
+spec:
+  containers:
+    - image: mallive/test-mysql:latest
+      name: test-mysql
+      imagePullPolicy: IfNotPresent
+      resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Never
+status: {}

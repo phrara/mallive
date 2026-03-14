@@ -82,30 +82,6 @@ spec:
             - name: mysql-init
               mountPath: /docker-entrypoint-initdb.d
 
-          # # 就绪探测
-          # readinessProbe:
-          #   exec:
-          #     command:
-          #       - sh
-          #       - -c
-          #       - mysqladmin ping -uroot -proot
-          #   initialDelaySeconds: 20
-          #   periodSeconds: 10
-          #   timeoutSeconds: 5
-          #   failureThreshold: 5
-
-          # # 存活探测
-          # livenessProbe:
-          #   exec:
-          #     command:
-          #       - sh
-          #       - -c
-          #       - mysqladmin ping -uroot -proot
-          #   initialDelaySeconds: 60
-          #   periodSeconds: 20
-          #   timeoutSeconds: 5
-          #   failureThreshold: 5
-
       volumes:
         - name: mysql-init
           configMap:

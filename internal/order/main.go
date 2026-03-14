@@ -9,8 +9,10 @@ import (
 	"github.com/phrara/mallive/common/discovery"
 	"github.com/phrara/mallive/common/genproto/orderpb"
 	"github.com/phrara/mallive/common/logging"
+	"github.com/phrara/mallive/common/metrics"
 	"github.com/phrara/mallive/common/server"
 	"github.com/phrara/mallive/common/tracing"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/phrara/mallive/order/infrastructure/consumer"
 	"github.com/phrara/mallive/order/ports"
@@ -40,8 +42,11 @@ func main() {
 	}
 	defer tracingShutdown(ctx)
 	
+	metricClient := metrics.NewPrometheusMetricsClient(
+		viper.GetString("order.serviceName"))
+
 	// App
-    app, closeF := service.NewApplication(ctx)
+    app, closeF := service.NewApplication(ctx, metricClient)
 	defer closeF()
 	
 	// Service Register
@@ -52,7 +57,7 @@ func main() {
 	defer func ()  {
 		_ = deregisterFunc()
 	}()
-	
+		
 	// Message Que
 	ch, closeMQ := broker.Connect(
 		viper.GetString("rabbitmq.user"),
@@ -82,6 +87,12 @@ func main() {
 			Middlewares: nil,
 			ErrorHandler: nil,
 		})
+
+		// Prometheus
+		router.GET("/metrics", gin.WrapH(promhttp.HandlerFor(
+			metricClient.GetPromRegistry(),
+			promhttp.HandlerOpts{},
+		)))
 	})
 
 }
